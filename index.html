@@ -147,16 +147,10 @@ function getPixelSize(times, threshold){
 			for(let i = 0, endI = img.height; i < endI; i+= sizeY){
 				for(let j = 0, endJ = img.width; j < endJ; j+= sizeX){
 					let patch = c.getImageData(j , i , sizeX, sizeY);
-					let r = g = b = 0;
-					for(let p = 0; p < patch.data.length; p+=4){
-						r += patch.data[p];
-						g += patch.data[p+1];
-						b += patch.data[p+2];
-					}
-					let totalPatch = patch.data.length/4;
-					rMean = r / totalPatch;
-					gMean = g / totalPatch;
-					bMean = b / totalPatch;
+					let pathMean = mean(patch.data);
+					rMean = pathMean[0];
+					gMean = pathMean[1];
+					bMean = pathMean[2];
 					if( (rMean > patch.data[patch.data.length/2]-threshold && rMean < patch.data[patch.data.length/2]+threshold) &&
 							(gMean > patch.data[patch.data.length/2+1]-threshold && gMean < patch.data[patch.data.length/2+1]+threshold) && 
 							(bMean > patch.data[patch.data.length/2+2]-threshold && bMean < patch.data[patch.data.length/2+2]+threshold) ){
