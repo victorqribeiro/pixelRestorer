@@ -8,7 +8,7 @@ A live version of it is hosted [here](https://victorribeiro.com/pixelRestorer)
 
 ## How to use
 
-Select the image, the way of redrawing it (mean, mode or median) and click Run or Hit Enter on the keyboard.
+Select the image, the way of redrawing it ([mean, mode or median](https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/mean-median-basics/a/mean-median-and-mode-review)) and click Run or Hit Enter on the keyboard.
 
 ## About 
 
