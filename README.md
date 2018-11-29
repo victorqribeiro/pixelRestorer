@@ -44,3 +44,7 @@ It got rid of most artefacts caused by scaling or compressing the original image
 The algorithm does not work 100% of the cases nor with every possible image. For example, it doesn't work if the pixelSize is offsetted or if the image has a large area of the same color - as a background for instance.
 
 If most of the image is similar, like a image with a large solid white color as background and just a small portion of it being the pixel art, it can't figure out the right size of the pixelSize. Cause every window will have a low entropy value (since its most white, no matter what).
+
+## Disclaimer
+
+I do not own the images used in the examples, I googled them. If you are or know the authors, contact me and will give proper credit.
