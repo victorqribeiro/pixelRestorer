@@ -45,6 +45,8 @@ The algorithm does not work 100% of the cases nor with every possible image. For
 
 If most of the image is similar, like a image with a large solid white color as background and just a small portion of it being the pixel art, it can't figure out the right size of the pixelSize. Cause every window will have a low entropy value (since its most white, no matter what).
 
+It also blurs the images sometimes (most of the times), due to the fact that the image was scaled to some odd value (and the pixel seize its no a integer - like, it guessed the pixel size would be 6,5x6,5).
+
 ## Disclaimer
 
 I do not own the images used in the examples, I googled them. If you are or know the authors, contact me and will give proper credit.
