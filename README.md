@@ -47,6 +47,8 @@ If most of the image is similar, like a image with a large solid white color as 
 
 It also blurs the images sometimes (most of the times), due to the fact that the image was scaled to some odd value (and the pixel seize its no a integer - like, it guessed the pixel size would be 6,5x6,5).
 
+Also the code is a mess and has a lot of hard coded values in it. Sorry, I'll might refactor it later.
+
 ## Disclaimer
 
 I do not own the images used in the examples, I googled them. If you are or know the authors, contact me and will give proper credit.
