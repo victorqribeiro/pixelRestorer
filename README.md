@@ -12,7 +12,7 @@ Select the image, the way of redrawing it (mean, mode or median) and click Run o
 
 ## About 
 
-This is a project I've been idealizing from some time now. Is it possible to reconstruct a pixel art image that has been corrupted by scaling or compression? Well, lets give it a shot.
+This is a project I've been idealizing from some time now. Is it possible to reconstruct a pixel art image that has been corrupted by scaling or compression, using statistics? Well, lets give it a shot.
 
 ## The Algorithm
 
