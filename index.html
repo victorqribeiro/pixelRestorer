@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title> pixelRestorer </title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:url" content="https://www.victorribeiro.com/pixelRestorer" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Pixel Restorer" />
+<meta property="og:author" content="Victor Ribeiro" />
+<meta property="og:description" content="Using statistics to restore pixel art images." />
+<meta property="og:image" content="https://www.victorribeiro.com/favicon.png" />
+<link rel="icon" href="favicon.png" />
+<style>
+html, body{
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+#canvas{
+	image-rendering: pixelated;
+	display: block;
+	z-index: 0;
+	max-width: 100%;
+}
+#buffer{
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+	max-width: 100%;
+}
+select, button{
+	display: block;
+	width: 100%;
+	padding: 0.3rem;
+	font-family: Arial, Helvetica, Sans;
+	font-size: 1rem;
+}
+#wrap{
+	height: 100%;
+	display: grid;
+	grid-template-rows: 1fr 1fr;
+	align-items: center;
+	justify-content: center;
+}
+</style>
+</head>
+<body>
+<script>
+let img, canvas, c, buffer, bc, probability, totalColors, size, pixelSize, btn, resize = true, render, _i, _j, method = 1;
+
+let _sort = function(a,b){
+	return a - b;
+}
+
+let mode = function(array){
+	/* tem que tirar a moda da cor inteira e nao por canal. ex. [r,g,b] */
+	let mod = {};
+	for(let i = 0; i < array.length; i+=4){
+		let index = array[i]+","+array[i+1]+","+array[i+2];
+		if( mod[ index ] ){
+			mod[index] += 1;
+		}else{
+			mod[index] = 1;
+		}
+	}
+	let mode = [ array[ Math.floor(array.length/2) ],
+							 array[ Math.floor(array.length/2)+1],
+							 array[ Math.floor(array.length/2)+2 ] ], _max = 0;
+	for(let k in mod){
+		if( mod[k] > _max ){
+			_max = mod[k];
+			mode = k.split(",").map( _ => parseInt(_) );
+		}
+	}
+	return mode;
+}
+
+let median = function(array){
+	let index = Math.floor(array.length/2);
+	let median = [ array[index], array[index+1], array[index+2] ];
+	return median;
+}
+
+let mean = function(array){
+	let r = 0, g = 0, b = 0;
+	for(let i = 0; i < array.length; i+=4){
+		r += array[i];
+		g += array[i+1];
+		b += array[i+2];
+	}
+	let s = array.length / 4;
+	r = r / s;
+	g = g / s;
+	b = b / s;
+	return [r,g,b];
+}
+function init(src,action){
+	switch(action){
+		case '1' :
+				method = mean;
+			break;
+		case '2' :
+				method = mode;
+			break;
+		case '3' :
+				method = median
+			break;
+		default :
+			method = mean;
+	}
+	if(render){
+		cancelAnimationFrame( render );
+		render = null;
+	}
+	_i = 0, _j = 0;
+	btn = document.querySelector('#btn');
+	btn.innerText = "Run";
+	img = new Image();
+	img.src = src || 'img/mario.jpg';
+	img.onload = ()=>{
+		canvas = document.querySelector('#canvas');
+		canvas.width = img.width;
+		canvas.height = img.height;
+		buffer = document.querySelector('#buffer');
+		buffer.width = canvas.width;
+		buffer.height = canvas.height;
+		bc = buffer.getContext('2d');
+		c = canvas.getContext('2d',{alpha: false});
+		c.drawImage(img,0,0);
+		//getColors(10);
+		getPixelSize(100,10);
+	}
+}
+
+function getPixelSize(times, threshold){
+	times = times || 2;
+	threshold = threshold || 5;
+	probability = {};
+	for(let t = 2; t < times; t+=2){
+		if( img.width / t >= 3 ){
+			let prob = 0;
+			let sizeX = img.width / t ;
+			let sizeY = img.height / t ;
+			for(let i = 0, endI = img.height; i < endI; i+= sizeY){
+				for(let j = 0, endJ = img.width; j < endJ; j+= sizeX){
+					let patch = c.getImageData(j , i , sizeX, sizeY);
+					let r = g = b = 0;
+					for(let p = 0; p < patch.data.length; p+=4){
+						r += patch.data[p];
+						g += patch.data[p+1];
+						b += patch.data[p+2];
+					}
+					let totalPatch = patch.data.length/4;
+					rMean = r / totalPatch;
+					gMean = g / totalPatch;
+					bMean = b / totalPatch;
+					if( (rMean > patch.data[patch.data.length/2]-threshold && rMean < patch.data[patch.data.length/2]+threshold) &&
+							(gMean > patch.data[patch.data.length/2+1]-threshold && gMean < patch.data[patch.data.length/2+1]+threshold) && 
+							(bMean > patch.data[patch.data.length/2+2]-threshold && bMean < patch.data[patch.data.length/2+2]+threshold) ){
+						prob += 1;
+					}
+				}
+			}
+			probability[t] = prob / (t*t);
+		}
+	}
+}
+
+/*
+function correctColors(){
+	let m = 0, size;
+	for(key in probability){
+		if( probability[key] > m ){
+			m = probability[key];
+			size = key;
+		}
+	}
+	size = Math.floor(img.width / size);
+	console.log( size );
+	for(let i = 0; i < img.height; i+= size){
+		for(let j = 0; j < img.width; j+= size){
+			let data = c.getImageData(j,i,size,size);
+			let r = [], g = [], b = [];
+			for(let c = 0; c < data.data.length; c+=4){
+				r.push(data.data[c]);
+				g.push(data.data[c+1]);
+				b.push(data.data[c+2]);
+			}
+			r.sort(_sort);
+			g.sort(_sort);
+			b.sort(_sort);
+			r = r[r.length/2];
+			g = g[g.length/2];
+			b = b[b.length/2];
+			for(let c = 0; c < data.data.length; c+=4){
+				data.data[c] = r;
+				data.data[c+1] = g;
+				data.data[c+2] = b;
+			}
+			c.putImageData(data,j,i);
+		}
+	}
+}
+*/
+
+function correctColorsRender(){
+	if( _i == 0 && _j == 0){
+	
+		let m = 0, size;
+		for(key in probability){
+			if( probability[key] > m ){
+				m = probability[key];
+				size = key;
+			}
+		}
+		
+		pixelSize = Math.floor(img.width / (Math.floor(size)+1));
+		if(resize){
+			let newW = size * pixelSize;
+			let newH = size * pixelSize;
+			canvas.width = newW;
+			canvas.height = newH;
+
+			c.drawImage(img,0,0,newW,newH);
+		}
+		let pos = canvas.getBoundingClientRect();
+		buffer.style.position = "absolute";
+		buffer.style.left = pos.left +"px";
+		buffer.style.top = pos.top + window.scrollY +"px";
+		buffer.width = canvas.width;
+		buffer.height = canvas.height;
+		buffer.style.width = pos.width+"px";
+		buffer.style.height = pos.height+"px";
+	}
+	
+	let data = c.getImageData(_j,_i,pixelSize,pixelSize);
+	let rgb = method( data.data );
+
+	for(let c = 0; c < data.data.length; c+=4){
+		data.data[c] = rgb[0];
+		data.data[c+1] = rgb[1];
+		data.data[c+2] = rgb[2];
+	}
+	
+	c.putImageData(data,_j,_i);
+	bc.clearRect(0,0,buffer.width,buffer.height);
+	bc.fillRect(_j,_i,pixelSize,pixelSize);
+
+	_j+=pixelSize;
+	if( _j >= img.width ){
+		_j = 0;
+		_i+=pixelSize;
+	}
+	if(_i < img.width){
+		render = requestAnimationFrame( correctColorsRender );
+	}
+}
+
+function correctColors(){
+	let m = 0, size;
+	for(key in probability){
+		if( probability[key] > m ){
+			m = probability[key];
+			size = key;
+		}
+	}
+	size = Math.floor(img.width / size);
+
+	for(let i = 0; i < img.height; i+= size){
+		for(let j = 0; j < img.width; j+= size){
+			let data = c.getImageData(j,i,size,size);
+			
+			let r = [], g = [], b = [];
+			for(let c = 0; c < data.data.length; c+=4){
+				r.push(data.data[c]);
+				g.push(data.data[c+1]);
+				b.push(data.data[c+2]);
+			}
+
+			r.sort(_sort);
+			g.sort(_sort);
+			b.sort(_sort);
+			r = r[Math.floor(r.length/2)];
+			g = g[Math.floor(g.length/2)];
+			b = b[Math.floor(b.length/2)];
+			
+			let minDist = Infinity, bestColor;
+			
+			for(let d = 0; d < totalColors.length; d++){
+				let col = totalColors[d][0].split(",").map(v=>parseInt(v));
+				let dist = distance([r,g,b],col);
+				if( dist < minDist ){
+					minDist = dist;
+					bestColor = col;
+				}
+			}
+			for(let c = 0; c < data.data.length; c+=4){
+				data.data[c] = 0;
+				data.data[c+1] = 0;
+				data.data[c+2] = 0;
+			}
+			
+			//c.fillRect(j,i,size,size);
+			c.putImageData(data,j,i);
+		}
+	}
+}
+
+function distance(a,b){
+	let sum = 0;
+	for(let s = 0; s < a.length; s++){
+		sum += Math.abs( parseInt(a[s]) - parseInt(b[s]) );
+	}
+	return sum;
+}
+
+function getColors(threshold){
+	threshold = threshold || 30;
+	let colors = {};
+	let data = c.getImageData(0,0,img.width,img.height);
+	for(let i = 0; i < data.data.length; i+=4){
+		if(colors[data.data[i]+","+data.data[i+1]+","+data.data[i+2]]){
+			colors[data.data[i]+","+data.data[i+1]+","+data.data[i+2]] += 1;
+		}else{
+			colors[data.data[i]+","+data.data[i+1]+","+data.data[i+2]] = 1;
+		}
+	}
+	
+	let items = Object.keys(colors).map(function(key) {
+		return [key, colors[key]];
+	});
+
+	items.sort(function(first, second) {
+		return second[1] - first[1];
+	});
+
+	for(let i = 0; i < items.length-1; i++){
+		let valueA = items[i][0].split(",").map(v=>parseInt(v));
+		for(let j = items.length-1; j > i+1; j--){
+
+			if(items[j][1] < 10){
+				items.splice(j,1);
+				continue;
+			}
+			
+			let valueB = items[j][0].split(",").map(v=>parseInt(v));
+
+			if( distance(valueA,valueB) < threshold ){
+				items[i][1] += items[j][1];
+				items.splice(j,1);
+			}
+		}
+	}
+	
+	items.sort(function(first, second) {
+		return second[1] - first[1];
+	});
+
+	//totalColors = items.slice(0, 20);
+	totalColors = items;	
+	
+}
+
+function colorDistance(a,b){
+	let minColorA = a[0], minColorB = b[0], indexA = 0, indexB = 0;
+	for(let i = 1; i < a.length; i++){
+		if( minColorA < a[i] ){
+			minColorA = a[i];
+			indexA = i;
+		}
+		if( minColorB < b[i] ){
+			minColorB = b[i];
+			indexB = i;
+		}
+	}
+	let dist = 0;
+	for(let i = 0; i < a.length; i++){
+		dist += Math.abs( a[i] - b[i] );
+	}
+	
+	if( indexA !== indexB ){
+		dist += 0.25 * minColorB;
+	}
+	
+	return dist;
+}
+
+function change(){
+	let src = document.querySelector('#src').value;
+	let method = document.querySelector('#method').value;
+	init(src,method);
+}
+
+function toggleAnimation(){
+	if(!render){
+		correctColorsRender();
+	}else{
+		cancelAnimationFrame( render );
+		render = null;	
+	}
+}
+
+window.onload = function(){
+
+	init();
+
+	document.body.addEventListener("keypress",function(e){
+		e.preventDefault();
+		if(e.keyCode == 13)
+			toggleAnimation();
+	});
+
+	btn.addEventListener("click", function(){
+		toggleAnimation();
+		btn.innerText = render ? "Pause" : "Run";
+	});
+	
+	window.addEventListener("resize",function(){
+		init();
+	});
+	
+}
+</script>
+<div id="wrap">
+	<div id="screen">
+		<canvas id="canvas"></canvas>
+		<canvas id="buffer"></canvas>
+	</div>
+	<div id="tools">
+		<select id="src" onchange="change()">
+			<option value="img/mario.jpg"> Mario </option>
+			<option value="img/starrynight.jpg"> Starry Night </option>
+			<option value="img/lighthouse.jpg"> Lighthouse </option>
+			<option value="img/woody-allen.jpg"> Woody Allen </option>
+		</select>
+		<select id="method" onchange="change()">
+			<option value="1"> Mean </option>
+			<option value="2"> Mode </option>
+			<option value="3"> Median </option>
+		</select>
+		<button id="btn"> Run </button>
+	</div>
+</div>
+</body>
+</html>
