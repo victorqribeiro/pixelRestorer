@@ -25,11 +25,11 @@ window = imageSize / 6
 ...
 ```
 
-The window is a squared matrix. 3x3, 6x6, 8x8...
+The window is a square matrix. 3x3, 6x6, 8x8...
 
 It stores all the probabilities in a dictionary then returns the most likely to be the right pixel size - the greater value.
 
-The algorithm caculates the probability of the window by getting the mean - sum of pixels devided by total pixels - of the area and comparing it to the median - element on the center of the array - plus some threshold. That's a way I found to calculate the entropy of the window. A window with low entropy must mean that the pixels in there are smiliar, right?!
+The algorithm calculates the probability of the window by getting the mean - sum of pixels divided by total pixels - of the area and comparing it to the median - element on the center of the array - plus some threshold. That's a way I found to calculate the entropy of the window. A window with low entropy must mean that the pixels in there are smiliar, right?!
 
 The second step is to redraw the image pixelSize by pixelSize getting the mean, mode or median of each pixelSize. E.g.: The algorithm determined that the pixelSize is 8x8. So, it gets a 8x8 patch of the image, take the mean, the mode or the median and redraw every real pixel (1x1) with that value. So now the pixelSize - the window of 8x8 - is now filled with pixels of the same value.
 
