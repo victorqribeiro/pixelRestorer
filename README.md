@@ -10,6 +10,8 @@ A live version of it is hosted [here](https://victorribeiro.com/pixelRestorer)
 
 Select the image, the way of redrawing it ([mean, mode or median](https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/mean-median-basics/a/mean-median-and-mode-review)) and click Run or Hit Enter on the keyboard.
 
+The processing is animated so you can see the algorithm working (it's not slow it was programmed like that).
+
 ## About 
 
 This is a project I've been idealizing from some time now. Is it possible to reconstruct a pixel art image that has been corrupted by scaling or compression, using statistics? Well, lets give it a shot.
